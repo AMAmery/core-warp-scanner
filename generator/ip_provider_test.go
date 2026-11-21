@@ -29,22 +29,22 @@ func TestAssetIPProvider_GetIPv4(t *testing.T) {
 
 	// Verify first entry from assets/ipv4.txt (162.159.192.0/24)
 	first := cidrs[0]
-	if first.BaseIP != "162.159.192.0" {
-		t.Errorf("expected first BaseIP to be %q, got %q", "162.159.192.0", first.BaseIP)
+	if first.String() != "162.159.192.0/24" {
+		t.Errorf("expected first CIDR to be %q, got %q", "162.159.192.0/24", first.String())
 	}
-	if first.Mask != 24 {
-		t.Errorf("expected first Mask to be 24, got %d", first.Mask)
+	if first.Mask() != 24 {
+		t.Errorf("expected first Mask to be 24, got %d", first.Mask())
 	}
-	if !first.IsV4 {
-		t.Errorf("expected first IsV4 to be true, got %v", first.IsV4)
+	if !first.IsV4() {
+		t.Errorf("expected first IsV4 to be true, got %v", first.IsV4())
 	}
 
 	for i, c := range cidrs {
-		if !c.IsV4 {
-			t.Errorf("entry %d (%s) expected IsV4 to be true", i, c.BaseIP)
+		if !c.IsV4() {
+			t.Errorf("entry %d (%s) expected IsV4 to be true", i, c.String())
 		}
-		if c.Mask <= 0 {
-			t.Errorf("entry %d (%s) expected positive Mask, got %d", i, c.BaseIP, c.Mask)
+		if c.Mask() <= 0 {
+			t.Errorf("entry %d (%s) expected positive Mask, got %d", i, c.String(), c.Mask())
 		}
 	}
 }
@@ -67,22 +67,22 @@ func TestAssetIPProvider_GetIPv6(t *testing.T) {
 
 	// Verify first entry from assets/ipv6.txt (2606:4700:d0::/48)
 	first := cidrs[0]
-	if first.BaseIP != "2606:4700:d0::" {
-		t.Errorf("expected first BaseIP to be %q, got %q", "2606:4700:d0::", first.BaseIP)
+	if first.String() != "2606:4700:d0::/48" {
+		t.Errorf("expected first CIDR to be %q, got %q", "2606:4700:d0::/48", first.String())
 	}
-	if first.Mask != 48 {
-		t.Errorf("expected first Mask to be 48, got %d", first.Mask)
+	if first.Mask() != 48 {
+		t.Errorf("expected first Mask to be 48, got %d", first.Mask())
 	}
-	if first.IsV4 {
-		t.Errorf("expected first IsV4 to be false, got %v", first.IsV4)
+	if first.IsV4() {
+		t.Errorf("expected first IsV4 to be false, got %v", first.IsV4())
 	}
 
 	for i, c := range cidrs {
-		if c.IsV4 {
-			t.Errorf("entry %d (%s) expected IsV4 to be false", i, c.BaseIP)
+		if c.IsV4() {
+			t.Errorf("entry %d (%s) expected IsV4 to be false", i, c.String())
 		}
-		if c.Mask <= 0 {
-			t.Errorf("entry %d (%s) expected positive Mask, got %d", i, c.BaseIP, c.Mask)
+		if c.Mask() <= 0 {
+			t.Errorf("entry %d (%s) expected positive Mask, got %d", i, c.String(), c.Mask())
 		}
 	}
 }
@@ -119,10 +119,10 @@ func TestAssetIPProvider_CustomAssetPaths(t *testing.T) {
 	if len(v4s) != 2 {
 		t.Fatalf("expected 2 v4 entries, got %d", len(v4s))
 	}
-	if v4s[0].BaseIP != "1.1.1.0" || v4s[0].Mask != 24 || !v4s[0].IsV4 {
+	if v4s[0].String() != "1.1.1.0/24" || v4s[0].Mask() != 24 || !v4s[0].IsV4() {
 		t.Errorf("unexpected first v4 entry: %+v", v4s[0])
 	}
-	if v4s[1].BaseIP != "1.0.0.0" || v4s[1].Mask != 24 || !v4s[1].IsV4 {
+	if v4s[1].String() != "1.0.0.0/24" || v4s[1].Mask() != 24 || !v4s[1].IsV4() {
 		t.Errorf("unexpected second v4 entry: %+v", v4s[1])
 	}
 
@@ -133,7 +133,7 @@ func TestAssetIPProvider_CustomAssetPaths(t *testing.T) {
 	if len(v6s) != 1 {
 		t.Fatalf("expected 1 v6 entry, got %d", len(v6s))
 	}
-	if v6s[0].BaseIP != "2606:4700::" || v6s[0].Mask != 32 || v6s[0].IsV4 {
+	if v6s[0].String() != "2606:4700::/32" || v6s[0].Mask() != 32 || v6s[0].IsV4() {
 		t.Errorf("unexpected v6 entry: %+v", v6s[0])
 	}
 }
@@ -174,4 +174,3 @@ func TestAssetIPProvider_InvalidCIDRFile(t *testing.T) {
 		t.Error("expected error parsing invalid CIDR from file, got nil")
 	}
 }
-
