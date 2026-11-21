@@ -10,8 +10,8 @@ import (
 
 // IPProvider defines the abstraction for providing IPv4 and IPv6 addresses.
 type IPProvider interface {
-	GetIPv4() ([]string, error)
-	GetIPv6() ([]string, error)
+	GetIPv4() ([]CIDR, error)
+	GetIPv6() ([]CIDR, error)
 }
 
 // assetPaths defines the asset file paths as a private struct (similar to an object in Kotlin).
@@ -31,17 +31,17 @@ var _ IPProvider = (*AssetIPProvider)(nil)
 var _ IPProvider = AssetIPProvider{}
 
 // GetIPv4 reads and returns IPv4 addresses/prefixes from the configured IPv4 asset file.
-func (AssetIPProvider) GetIPv4() ([]string, error) {
+func (AssetIPProvider) GetIPv4() ([]CIDR, error) {
 	return readLines(assetPaths.ipv4)
 }
 
 // GetIPv6 reads and returns IPv6 addresses/prefixes from the configured IPv6 asset file.
-func (AssetIPProvider) GetIPv6() ([]string, error) {
+func (AssetIPProvider) GetIPv6() ([]CIDR, error) {
 	return readLines(assetPaths.ipv6)
 }
 
-// readLines reads a file line by line, trimming whitespace and ignoring empty lines.
-func readLines(path string) ([]string, error) {
+// readLines reads a file line by line, parsing non-empty lines into CIDR instances.
+func readLines(path string) ([]CIDR, error) {
 	resolvedPath := resolvePath(path)
 	file, err := os.Open(resolvedPath)
 	if err != nil {
@@ -49,21 +49,25 @@ func readLines(path string) ([]string, error) {
 	}
 	defer file.Close()
 
-	var lines []string
+	var cidrs []CIDR
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		lines = append(lines, line)
+		cidr, err := ParseCIDR(line)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse CIDR %q from file %q: %w", line, path, err)
+		}
+		cidrs = append(cidrs, cidr)
 	}
 
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error reading asset file %q: %w", path, err)
 	}
 
-	return lines, nil
+	return cidrs, nil
 }
 
 // resolvePath checks if path exists directly; if not, checks parent directory (useful when running tests from subpackages).
